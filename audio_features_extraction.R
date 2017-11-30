@@ -4,13 +4,15 @@ fs <- list.files(path = getwd(), pattern = ".wav$", ignore.case = TRUE)
 for(i in fs){
   print(i)
 }
+count <- 0
 # convert if any mp3 to wav
 for (item in fs){
+  count <- count + 1 
   #audio_mp3 <- readMP3(item)
   #file_name <- substr(item, 1, nchar(item)-4)
   #audio_wav_path <- paste(file_name, "wav", sep = ".")
   #writeWave(audio_mp3,audio_wav_path,extensible=FALSE)
-  r <- tuneR::readWave(item)
+  tryCatch({r <- tuneR::readWave(item)
   #frequency spectrum analysis
   songspec <- seewave::spec(r, f = r@samp.rate, plot = TRUE)
   analysis <- seewave::specprop(songspec, f = r@samp.rate, flim = c(0, 280/1000), plot = TRUE)
@@ -56,8 +58,13 @@ for (item in fs){
   
   #save results
   array <- data.frame(item, duration,meanfreq, sd, median, Q25, Q75, IQR, skew, kurt, sp.ent, sfm, mode, centroid, meanfun, minfun, maxfun, meandom, mindom, maxdom, dfrange, modindx)
-  
+  print(count)
+  print("Writing for")
+  print(item)
+  print(array)
   write.table(array, file = "attributes.csv", sep = ",", append=TRUE, row.names = FALSE, col.names = FALSE)
-
+  }, error = function(e) {
+	write.table(item, file = "not_processed.csv", sep = ",", append = TRUE, row.names = FALSE, col.names = FALSE)
+})
 }
 
